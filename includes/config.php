@@ -8,6 +8,7 @@ define('DB_PASS', getenv('DB_PASS') ?: '');
 define('MAX_INTENTOS', 3);
 define('MINUTOS_BLOQUEO', 15);
 
+date_default_timezone_set('America/Mazatlan');
 session_start();
 
 function db(): PDO
