@@ -1,0 +1,76 @@
+<!doctype html><html><head><meta charset="utf-8"><title>MER Nexo CRM</title>
+<style>@page{size:A3 landscape;margin:10mm}body{margin:0;padding:32px;background:#fff;font-family:Inter,system-ui,sans-serif}h1{font-size:22px;margin:0 0 4px}p{margin:0 0 16px;color:#475467;font-size:13px}</style></head>
+<body><h1>Modelo Entidad-Relación · Nexo CRM</h1><p>Entregable 2 · Base de datos MySQL (InnoDB, utf8mb4)</p>
+<pre class="mermaid">
+erDiagram
+  ROLES ||--o{ USUARIOS : "asigna"
+  USUARIOS |o--o{ EMPRESAS : "es responsable de"
+  USUARIOS |o--o{ CONTACTOS : "es responsable de"
+  USUARIOS ||--o{ OPORTUNIDADES : "gestiona"
+  USUARIOS ||--o{ ACTIVIDADES : "realiza"
+  EMPRESAS |o--o{ CONTACTOS : "emplea"
+  EMPRESAS ||--o{ OPORTUNIDADES : "genera"
+  CONTACTOS |o--o{ OPORTUNIDADES : "participa en"
+  ETAPAS ||--o{ OPORTUNIDADES : "clasifica"
+  CONTACTOS |o--o{ ACTIVIDADES : "involucra"
+  OPORTUNIDADES |o--o{ ACTIVIDADES : "da seguimiento"
+  ROLES { tinyint id PK
+    varchar nombre UK }
+  USUARIOS { int id PK
+    tinyint rol_id FK
+    varchar nombre
+    varchar apellido
+    varchar correo UK
+    varchar password_hash
+    varchar puesto
+    boolean activo
+    tinyint intentos_fallidos
+    datetime bloqueado_hasta
+    datetime ultimo_acceso
+    timestamp creado_en }
+  EMPRESAS { int id PK
+    varchar nombre
+    varchar rfc UK
+    varchar industria
+    varchar telefono
+    varchar sitio_web
+    varchar direccion
+    varchar ciudad
+    int responsable_id FK
+    timestamp creado_en }
+  CONTACTOS { int id PK
+    int empresa_id FK
+    int responsable_id FK
+    varchar nombre
+    varchar apellido
+    varchar correo
+    varchar telefono
+    varchar puesto
+    enum estado
+    timestamp creado_en }
+  ETAPAS { tinyint id PK
+    varchar nombre UK
+    tinyint orden
+    tinyint probabilidad }
+  OPORTUNIDADES { int id PK
+    varchar nombre
+    int empresa_id FK
+    int contacto_id FK
+    tinyint etapa_id FK
+    int responsable_id FK
+    decimal valor
+    date cierre_estimado
+    timestamp creado_en }
+  ACTIVIDADES { int id PK
+    enum tipo
+    varchar asunto
+    text descripcion
+    datetime fecha_hora
+    enum estado
+    int usuario_id FK
+    int contacto_id FK
+    int oportunidad_id FK
+    timestamp creado_en }
+</pre>
+<script type="module">import m from 'https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs';m.initialize({startOnLoad:true,theme:'neutral',er:{layoutDirection:'LR'}});</script>
+</body></html>
