@@ -1,5 +1,4 @@
 <?php
-// Datos de conexión. En InfinityFree: Panel → MySQL Databases (host tipo sqlXXX.infinityfree.com, BD/usuario if0_XXXX).
 define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
 define('DB_NAME', getenv('DB_NAME') ?: 'nexo_crm');
 define('DB_USER', getenv('DB_USER') ?: 'root');
@@ -9,7 +8,7 @@ define('MAX_INTENTOS', 3);
 define('MINUTOS_BLOQUEO', 15);
 
 date_default_timezone_set('America/Mazatlan');
-session_start();
+session_start(['cookie_httponly' => true, 'cookie_samesite' => 'Lax']);
 
 function db(): PDO
 {

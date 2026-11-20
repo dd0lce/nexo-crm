@@ -1,6 +1,3 @@
--- Nexo CRM · Esquema de base de datos (MySQL 5.7+/8, MariaDB 10.3+)
--- Importar en phpMyAdmin (InfinityFree) o: mysql -u USER -p DB < schema.sql
-
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS actividades, oportunidades, etapas, contactos, empresas, usuarios, roles;
@@ -60,7 +57,7 @@ CREATE TABLE etapas (
   id            TINYINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   nombre        VARCHAR(40) NOT NULL UNIQUE,
   orden         TINYINT UNSIGNED NOT NULL,
-  probabilidad  TINYINT UNSIGNED NOT NULL COMMENT 'Porcentaje 0-100'
+  probabilidad  TINYINT UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE oportunidades (
@@ -95,10 +92,8 @@ CREATE TABLE actividades (
   CONSTRAINT fk_act_oportunidad FOREIGN KEY (oportunidad_id) REFERENCES oportunidades(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ───────── Datos de prueba ─────────
 INSERT INTO roles (nombre) VALUES ('Administrador'), ('Gerente comercial'), ('Ejecutivo de ventas');
 
--- Contraseña de los 3 usuarios: Nexo2026!
 INSERT INTO usuarios (rol_id, nombre, apellido, correo, password_hash, puesto) VALUES
  (2, 'Ana',   'Torres', 'ana.torres@empresa.com', '$2y$10$eR7O74TWabu3WjxR/FfcM.VwYnDWlaqQb8YZ6B0JA0V5/LcS483km', 'Gerente comercial'),
  (3, 'Luis',  'Pérez',  'luis.perez@empresa.com', '$2y$10$eR7O74TWabu3WjxR/FfcM.VwYnDWlaqQb8YZ6B0JA0V5/LcS483km', 'Ejecutivo de ventas'),

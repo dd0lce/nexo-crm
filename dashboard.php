@@ -3,7 +3,6 @@ require __DIR__ . '/includes/layout.php';
 $u = layout_inicio('dashboard');
 $h = (int) date('G');
 $saludo = $h < 12 ? 'Buenos días' : ($h < 19 ? 'Buenas tardes' : 'Buenas noches');
-// ponytail: cifras de muestra del prototipo; conectar a consultas reales en el Entregable 3
 ?>
       <div class="encabezado">
         <div class="titulos">
