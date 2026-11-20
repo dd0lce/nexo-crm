@@ -4,31 +4,55 @@
 <pre class="mermaid">
 erDiagram
   ROLES ||--o{ USUARIOS : "asigna"
+  ROLES ||--o{ ROL_PERMISO : "tiene"
+  PERMISOS ||--o{ ROL_PERMISO : "se otorga en"
   USUARIOS |o--o{ EMPRESAS : "es responsable de"
   USUARIOS |o--o{ CONTACTOS : "es responsable de"
   USUARIOS ||--o{ OPORTUNIDADES : "gestiona"
   USUARIOS ||--o{ ACTIVIDADES : "realiza"
+  USUARIOS ||--o{ NOTAS : "escribe"
+  USUARIOS ||--o{ ARCHIVOS : "sube"
+  USUARIOS ||--o{ NOTIFICACIONES : "recibe"
   EMPRESAS |o--o{ CONTACTOS : "emplea"
   EMPRESAS ||--o{ OPORTUNIDADES : "genera"
   CONTACTOS |o--o{ OPORTUNIDADES : "participa en"
-  ETAPAS ||--o{ OPORTUNIDADES : "clasifica"
   CONTACTOS |o--o{ ACTIVIDADES : "involucra"
+  CONTACTOS ||--o{ NOTAS : "tiene"
+  CONTACTOS ||--o{ ARCHIVOS : "tiene"
+  ETAPAS ||--o{ OPORTUNIDADES : "clasifica"
   OPORTUNIDADES |o--o{ ACTIVIDADES : "da seguimiento"
-  ROLES { tinyint id PK
-    varchar nombre UK }
-  USUARIOS { int id PK
+  OPORTUNIDADES ||--o{ OPORTUNIDAD_PRODUCTO : "incluye"
+  PRODUCTOS ||--o{ OPORTUNIDAD_PRODUCTO : "se cotiza en"
+  ROLES {
+    tinyint id PK
+    varchar nombre UK
+    varchar descripcion
+  }
+  PERMISOS {
+    smallint id PK
+    varchar clave UK
+    varchar descripcion
+  }
+  ROL_PERMISO {
+    tinyint rol_id PK,FK
+    smallint permiso_id PK,FK
+  }
+  USUARIOS {
+    int id PK
     tinyint rol_id FK
     varchar nombre
     varchar apellido
     varchar correo UK
     varchar password_hash
     varchar puesto
-    boolean activo
+    enum estado
     tinyint intentos_fallidos
     datetime bloqueado_hasta
     datetime ultimo_acceso
-    timestamp creado_en }
-  EMPRESAS { int id PK
+    timestamp creado_en
+  }
+  EMPRESAS {
+    int id PK
     varchar nombre
     varchar rfc UK
     varchar industria
@@ -36,9 +60,12 @@ erDiagram
     varchar sitio_web
     varchar direccion
     varchar ciudad
+    enum estado
     int responsable_id FK
-    timestamp creado_en }
-  CONTACTOS { int id PK
+    timestamp creado_en
+  }
+  CONTACTOS {
+    int id PK
     int empresa_id FK
     int responsable_id FK
     varchar nombre
@@ -47,12 +74,17 @@ erDiagram
     varchar telefono
     varchar puesto
     enum estado
-    timestamp creado_en }
-  ETAPAS { tinyint id PK
+    date cliente_desde
+    timestamp creado_en
+  }
+  ETAPAS {
+    tinyint id PK
     varchar nombre UK
     tinyint orden
-    tinyint probabilidad }
-  OPORTUNIDADES { int id PK
+    tinyint probabilidad
+  }
+  OPORTUNIDADES {
+    int id PK
     varchar nombre
     int empresa_id FK
     int contacto_id FK
@@ -60,8 +92,27 @@ erDiagram
     int responsable_id FK
     decimal valor
     date cierre_estimado
-    timestamp creado_en }
-  ACTIVIDADES { int id PK
+    date fecha_cierre
+    varchar motivo_perdida
+    timestamp creado_en
+  }
+  PRODUCTOS {
+    int id PK
+    varchar sku UK
+    varchar nombre
+    varchar descripcion
+    decimal precio
+    boolean activo
+  }
+  OPORTUNIDAD_PRODUCTO {
+    int oportunidad_id PK,FK
+    int producto_id PK,FK
+    int cantidad
+    decimal precio_unitario
+    decimal descuento
+  }
+  ACTIVIDADES {
+    int id PK
     enum tipo
     varchar asunto
     text descripcion
@@ -70,7 +121,34 @@ erDiagram
     int usuario_id FK
     int contacto_id FK
     int oportunidad_id FK
-    timestamp creado_en }
+    timestamp creado_en
+  }
+  NOTAS {
+    int id PK
+    int contacto_id FK
+    int usuario_id FK
+    text contenido
+    timestamp creado_en
+  }
+  ARCHIVOS {
+    int id PK
+    int contacto_id FK
+    int usuario_id FK
+    varchar nombre
+    varchar ruta
+    varchar tipo_mime
+    int tamano_bytes
+    timestamp creado_en
+  }
+  NOTIFICACIONES {
+    int id PK
+    int usuario_id FK
+    varchar titulo
+    varchar mensaje
+    varchar enlace
+    boolean leida
+    timestamp creado_en
+  }
 </pre>
 <script type="module">import m from 'https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs';m.initialize({startOnLoad:true,theme:'neutral',er:{layoutDirection:'LR'}});</script>
 </body></html>

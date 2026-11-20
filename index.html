@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Iniciar sesión · Nexo CRM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body class="login">
+  <aside class="login-marca">
+    <div class="logo"><span class="logo-n">N</span> Nexo CRM</div>
+    <div class="login-mensaje">
+      <h1>Relaciones comerciales claras, decisiones más rápidas.</h1>
+      <p>Centraliza contactos, empresas y oportunidades en un solo lugar.</p>
+    </div>
+    <small>© 2026 Nexo CRM · Uso interno corporativo</small>
+  </aside>
+
+  <main class="login-form">
+    <form class="login-caja" method="post" action="login.php">
+      <div class="titulos">
+        <h2 class="h1">Iniciar sesión</h2>
+        <p>Ingresa con tu cuenta corporativa.</p>
+      </div>
+
+      <div class="alerta" role="alert" id="alerta" hidden>
+        <span class="alerta-icono"><img src="assets/icons/error.svg" width="18.3333" height="18.3333" alt=""></span>
+        <div>
+          <strong id="alerta-titulo"></strong>
+          <p id="alerta-mensaje"></p>
+        </div>
+        <button type="button" class="alerta-cerrar" aria-label="Cerrar" onclick="this.parentElement.hidden = true">
+          <img src="assets/icons/cerrar.svg" width="11.6667" height="11.6667" alt="">
+        </button>
+      </div>
+
+      <label class="campo">
+        <span>Correo corporativo</span>
+        <input type="email" name="correo" id="correo" required autocomplete="username" placeholder="ana.torres@empresa.com">
+      </label>
+
+      <label class="campo" id="campo-password">
+        <span>Contraseña</span>
+        <input type="password" name="password" required autocomplete="current-password" placeholder="••••••••••">
+        <small hidden>La contraseña no coincide con el correo ingresado.</small>
+      </label>
+
+      <div class="opciones">
+        <label class="check"><input type="checkbox" name="recordarme" value="1"> Recordarme</label>
+        <a href="#" onclick="return false" title="Contacta a soporte TI">¿Olvidaste tu contraseña?</a>
+      </div>
+
+      <button class="btn btn-primario btn-bloque" type="submit">Ingresar</button>
+      <small class="tenue">¿Problemas para acceder? Contacta a soporte TI.</small>
+    </form>
+  </main>
+
+  <script>
+    const form = document.querySelector('form');
+    const correo = document.getElementById('correo');
+    const params = new URLSearchParams(location.search);
+    const quedan = Number(params.get('quedan'));
+    const errores = {
+      datos: ['Datos incompletos', 'Ingresa un correo válido y tu contraseña.'],
+      credenciales: ['No pudimos iniciar sesión', quedan
+        ? `Verifica tus credenciales. Te quedan ${quedan} ${quedan === 1 ? 'intento' : 'intentos'} antes del bloqueo.`
+        : 'Verifica tus credenciales e inténtalo de nuevo.'],
+      bloqueado: ['Cuenta bloqueada', 'Demasiados intentos fallidos. Intenta de nuevo en 15 minutos.'],
+    };
+    const error = errores[params.get('error')];
+
+    try { correo.value = sessionStorage.getItem('correo') || ''; } catch {}
+    form.addEventListener('submit', () => { try { sessionStorage.setItem('correo', correo.value); } catch {} });
+
+    if (error) {
+      document.getElementById('alerta-titulo').textContent = error[0];
+      document.getElementById('alerta-mensaje').textContent = error[1];
+      document.getElementById('alerta').hidden = false;
+      if (params.get('error') === 'credenciales') {
+        const campo = document.getElementById('campo-password');
+        campo.classList.add('campo-error');
+        campo.querySelector('small').hidden = false;
+      }
+    }
+  </script>
+</body>
+</html>

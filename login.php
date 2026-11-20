@@ -1,55 +1,45 @@
 <?php
 require __DIR__ . '/includes/config.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: index.php');
+function volver(string $error, int $quedan = 0): never
+{
+    header('Location: index.html?error=' . $error . ($quedan ? "&quedan=$quedan" : ''));
     exit;
 }
 
-function fallar(string $titulo, string $mensaje, string $correo, bool $campo = false): never
-{
-    $_SESSION['login_error'] = compact('titulo', 'mensaje', 'correo', 'campo');
-    header('Location: index.php');
-    exit;
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    volver('');
 }
 
 $correo   = trim($_POST['correo'] ?? '');
 $password = $_POST['password'] ?? '';
 
-if (!hash_equals($_SESSION['csrf'] ?? '', $_POST['csrf'] ?? '')) {
-    fallar('Sesión expirada', 'Recarga la página e inténtalo de nuevo.', $correo);
-}
 if (!filter_var($correo, FILTER_VALIDATE_EMAIL) || $password === '') {
-    fallar('Datos incompletos', 'Ingresa un correo válido y tu contraseña.', $correo);
+    volver('datos');
 }
 
 $st = db()->prepare(
-    'SELECT u.*, r.nombre AS rol FROM usuarios u JOIN roles r ON r.id = u.rol_id WHERE u.correo = ? AND u.activo = 1'
+    "SELECT u.*, r.nombre AS rol FROM usuarios u JOIN roles r ON r.id = u.rol_id WHERE u.correo = ? AND u.estado = 'activo'"
 );
 $st->execute([$correo]);
 $u = $st->fetch();
 
 if ($u && $u['bloqueado_hasta'] && strtotime($u['bloqueado_hasta']) > time()) {
-    fallar('Cuenta bloqueada', 'Demasiados intentos fallidos. Intenta de nuevo en ' . MINUTOS_BLOQUEO . ' minutos.', $correo);
+    volver('bloqueado');
 }
 
 if (!$u || !password_verify($password, $u['password_hash'])) {
-    if ($u) {
-        $intentos = $u['intentos_fallidos'] + 1;
-        $bloquear = $intentos >= MAX_INTENTOS;
-        db()->prepare('UPDATE usuarios SET intentos_fallidos = ?, bloqueado_hasta = ? WHERE id = ?')->execute([
-            $bloquear ? 0 : $intentos,
-            $bloquear ? date('Y-m-d H:i:s', time() + MINUTOS_BLOQUEO * 60) : null,
-            $u['id'],
-        ]);
-        $quedan = MAX_INTENTOS - $intentos;
-        $msg = $bloquear
-            ? 'Cuenta bloqueada por ' . MINUTOS_BLOQUEO . ' minutos.'
-            : "Verifica tus credenciales. Te quedan $quedan " . ($quedan === 1 ? 'intento' : 'intentos') . ' antes del bloqueo.';
-    } else {
-        $msg = 'Verifica tus credenciales e inténtalo de nuevo.';
+    if (!$u) {
+        volver('credenciales');
     }
-    fallar('No pudimos iniciar sesión', $msg, $correo, true);
+    $intentos = $u['intentos_fallidos'] + 1;
+    $bloquear = $intentos >= MAX_INTENTOS;
+    db()->prepare('UPDATE usuarios SET intentos_fallidos = ?, bloqueado_hasta = ? WHERE id = ?')->execute([
+        $bloquear ? 0 : $intentos,
+        $bloquear ? date('Y-m-d H:i:s', time() + MINUTOS_BLOQUEO * 60) : null,
+        $u['id'],
+    ]);
+    $bloquear ? volver('bloqueado') : volver('credenciales', MAX_INTENTOS - $intentos);
 }
 
 db()->prepare('UPDATE usuarios SET intentos_fallidos = 0, bloqueado_hasta = NULL, ultimo_acceso = NOW() WHERE id = ?')
@@ -57,11 +47,11 @@ db()->prepare('UPDATE usuarios SET intentos_fallidos = 0, bloqueado_hasta = NULL
 
 session_regenerate_id(true);
 $_SESSION['usuario'] = [
-    'id'     => $u['id'],
-    'nombre' => $u['nombre'],
+    'id'       => $u['id'],
+    'nombre'   => $u['nombre'],
     'apellido' => $u['apellido'],
-    'puesto' => $u['puesto'],
-    'rol'    => $u['rol'],
+    'puesto'   => $u['puesto'],
+    'rol'      => $u['rol'],
 ];
 
 if (!empty($_POST['recordarme'])) {

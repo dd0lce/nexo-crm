@@ -1,12 +1,16 @@
 <?php
-define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-define('DB_NAME', getenv('DB_NAME') ?: 'nexo_crm');
-define('DB_USER', getenv('DB_USER') ?: 'root');
-define('DB_PASS', getenv('DB_PASS') ?: '');
+if (is_file(__DIR__ . '/config.local.php')) {
+    require __DIR__ . '/config.local.php';
+}
+defined('DB_HOST') || define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+defined('DB_NAME') || define('DB_NAME', getenv('DB_NAME') ?: 'nexo_crm');
+defined('DB_USER') || define('DB_USER', getenv('DB_USER') ?: 'root');
+defined('DB_PASS') || define('DB_PASS', getenv('DB_PASS') ?: '');
 
 define('MAX_INTENTOS', 3);
 define('MINUTOS_BLOQUEO', 15);
 
+ini_set('display_errors', '0');
 date_default_timezone_set('America/Mazatlan');
 session_start(['cookie_httponly' => true, 'cookie_samesite' => 'Lax']);
 
@@ -26,15 +30,10 @@ function e(?string $s): string
     return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8');
 }
 
-function csrf_token(): string
-{
-    return $_SESSION['csrf'] ??= bin2hex(random_bytes(16));
-}
-
 function requiere_login(): array
 {
     if (empty($_SESSION['usuario'])) {
-        header('Location: index.php');
+        header('Location: index.html');
         exit;
     }
     return $_SESSION['usuario'];
