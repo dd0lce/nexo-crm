@@ -18,32 +18,37 @@ if (!filter_var($correo, FILTER_VALIDATE_EMAIL) || $password === '') {
     volver('datos');
 }
 
-$st = db()->prepare(
-    "SELECT u.*, r.nombre AS rol FROM usuarios u JOIN roles r ON r.id = u.rol_id WHERE u.correo = ? AND u.estado = 'activo'"
-);
-$st->execute([$correo]);
-$u = $st->fetch();
+try {
+    $st = db()->prepare(
+        "SELECT u.*, r.nombre AS rol FROM usuarios u JOIN roles r ON r.id = u.rol_id WHERE u.correo = ? AND u.estado = 'activo'"
+    );
+    $st->execute([$correo]);
+    $u = $st->fetch();
 
-if ($u && $u['bloqueado_hasta'] && strtotime($u['bloqueado_hasta']) > time()) {
-    volver('bloqueado');
-}
-
-if (!$u || !password_verify($password, $u['password_hash'])) {
-    if (!$u) {
-        volver('credenciales');
+    if ($u && $u['bloqueado_hasta'] && strtotime($u['bloqueado_hasta']) > time()) {
+        volver('bloqueado');
     }
-    $intentos = $u['intentos_fallidos'] + 1;
-    $bloquear = $intentos >= MAX_INTENTOS;
-    db()->prepare('UPDATE usuarios SET intentos_fallidos = ?, bloqueado_hasta = ? WHERE id = ?')->execute([
-        $bloquear ? 0 : $intentos,
-        $bloquear ? date('Y-m-d H:i:s', time() + MINUTOS_BLOQUEO * 60) : null,
-        $u['id'],
-    ]);
-    $bloquear ? volver('bloqueado') : volver('credenciales', MAX_INTENTOS - $intentos);
-}
 
-db()->prepare('UPDATE usuarios SET intentos_fallidos = 0, bloqueado_hasta = NULL, ultimo_acceso = NOW() WHERE id = ?')
-    ->execute([$u['id']]);
+    if (!$u || !password_verify($password, $u['password_hash'])) {
+        if (!$u) {
+            volver('credenciales');
+        }
+        $intentos = $u['intentos_fallidos'] + 1;
+        $bloquear = $intentos >= MAX_INTENTOS;
+        db()->prepare('UPDATE usuarios SET intentos_fallidos = ?, bloqueado_hasta = ? WHERE id = ?')->execute([
+            $bloquear ? 0 : $intentos,
+            $bloquear ? date('Y-m-d H:i:s', time() + MINUTOS_BLOQUEO * 60) : null,
+            $u['id'],
+        ]);
+        $bloquear ? volver('bloqueado') : volver('credenciales', MAX_INTENTOS - $intentos);
+    }
+
+    db()->prepare('UPDATE usuarios SET intentos_fallidos = 0, bloqueado_hasta = NULL, ultimo_acceso = NOW() WHERE id = ?')
+        ->execute([$u['id']]);
+} catch (RuntimeException $e) {
+    error_log('[nexo-crm] Error de configuración o base de datos durante el login: ' . $e->getMessage());
+    volver('servicio');
+}
 
 session_regenerate_id(true);
 $_SESSION['usuario'] = [

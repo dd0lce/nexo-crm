@@ -37,7 +37,7 @@ docs/              MER
 1. Crear cuenta y sitio en https://infinityfree.com.
 2. Panel → **MySQL Databases** → crear BD. Anotar host (`sqlXXX.infinityfree.com`), nombre, usuario (`if0_…`) y contraseña.
 3. Panel → **phpMyAdmin** → seleccionar la BD → **Importar** → `database/schema.sql`.
-4. Crear `includes/config.local.php` (no se sube al repo) con esos 4 datos:
+4. Crear `includes/config.local.php` (no se sube al repo) con esos 4 datos. No uses `localhost` como host salvo que la base de datos esté en el mismo servidor web:
    ```php
    <?php
    define('DB_HOST', 'sqlXXX.infinityfree.com');
@@ -54,7 +54,8 @@ docs/              MER
 docker network create nexo
 docker run -d --name nexo-db --network nexo -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=nexo_crm mysql:8
 docker exec -i nexo-db mysql -uroot -proot nexo_crm < database/schema.sql
-docker run -d --name nexo-web --network nexo -p 8088:80 -e DB_HOST=nexo-db -e DB_PASS=root \
+docker run -d --name nexo-web --network nexo -p 8088:80 \
+  -e DB_HOST=nexo-db -e DB_NAME=nexo_crm -e DB_USER=root -e DB_PASS=root \
   -v "$PWD":/var/www/html php:8.2-apache sh -c "docker-php-ext-install pdo_mysql && apache2-foreground"
 # http://localhost:8088
 ```

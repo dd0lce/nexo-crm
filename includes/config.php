@@ -2,10 +2,12 @@
 if (is_file(__DIR__ . '/config.local.php')) {
     require __DIR__ . '/config.local.php';
 }
-defined('DB_HOST') || define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-defined('DB_NAME') || define('DB_NAME', getenv('DB_NAME') ?: 'nexo_crm');
-defined('DB_USER') || define('DB_USER', getenv('DB_USER') ?: 'root');
-defined('DB_PASS') || define('DB_PASS', getenv('DB_PASS') ?: '');
+
+foreach (['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASS'] as $name) {
+    if (!defined($name) && ($value = getenv($name)) !== false) {
+        define($name, $value);
+    }
+}
 
 define('MAX_INTENTOS', 3);
 define('MINUTOS_BLOQUEO', 15);
@@ -17,6 +19,17 @@ session_start(['cookie_httponly' => true, 'cookie_samesite' => 'Lax']);
 function db(): PDO
 {
     static $pdo;
+    $faltantes = array_filter(
+        ['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASS'],
+        static fn(string $name): bool => !defined($name)
+            || ($name !== 'DB_PASS' && constant($name) === '')
+    );
+    if ($faltantes) {
+        throw new RuntimeException(
+            'Configura DB_HOST, DB_NAME, DB_USER y DB_PASS en includes/config.local.php o como variables de entorno.'
+        );
+    }
+
     return $pdo ??= new PDO(
         'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4',
         DB_USER,
